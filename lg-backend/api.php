@@ -65,21 +65,41 @@ if (!in_array($method, LG_METHODS, true)) {
 
 // Валидация IP/хоста
 $targetHost = $target;
+
+// Создаем упрощенные функции валидации для API (без ограничений на приватные адреса)
+function isValidIpv4ForApi(string $ip): bool {
+    return (bool)filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4);
+}
+
+function isValidIpv6ForApi(string $ip): bool {
+    return (bool)filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6);
+}
+
 if (in_array($method, ['ping', 'mtr', 'traceroute'])) {
-    if (!LookingGlass::isValidIpv4($target) &&
+    // Для IPv4 используем упрощенную валидацию (без FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)
+    if (!isValidIpv4ForApi($target) &&
         !$targetHost = LookingGlass::isValidHost($target, LookingGlass::IPV4)) {
         http_response_code(400);
         echo "Invalid IPv4 target";
         exit;
     }
+    // Если target - валидный IPv4, используем его как есть
+    if (isValidIpv4ForApi($target)) {
+        $targetHost = $target;
+    }
 }
 
 if (in_array($method, ['ping6', 'mtr6', 'traceroute6'])) {
-    if (!LookingGlass::isValidIpv6($target) &&
+    // Для IPv6 используем упрощенную валидацию (без FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)
+    if (!isValidIpv6ForApi($target) &&
         !$targetHost = LookingGlass::isValidHost($target, LookingGlass::IPV6)) {
         http_response_code(400);
         echo "Invalid IPv6 target";
         exit;
+    }
+    // Если target - валидный IPv6, используем его как есть
+    if (isValidIpv6ForApi($target)) {
+        $targetHost = $target;
     }
 }
 
