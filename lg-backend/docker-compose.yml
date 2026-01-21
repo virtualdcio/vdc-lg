@@ -1,3 +1,4 @@
+# docker-compose.yml - ИСПРАВЛЕННАЯ ВЕРСИЯ
 version: '3.8'
 
 services:
@@ -10,6 +11,9 @@ services:
       - IPV6=${IPV6:-::1}
       - METHODS=${METHODS:-["ping","traceroute","mtr"]}
       - ALLOWED_ORIGIN=${ALLOWED_ORIGIN:-https://vdc.ru}
+    # ДОБАВЛЯЕМ монтирование config.php
+    volumes:
+      - ./config.php:/var/www/html/config.php:ro
     restart: unless-stopped
     networks:
       - lg-network
@@ -23,10 +27,9 @@ services:
     volumes:
       - ./nginx-ssl.conf:/etc/nginx/conf.d/default.conf:ro
       - ./ssl:/etc/ssl:ro
+      # УДАЛЯЕМ config.php отсюда, он нужен только в PHP-FPM
       - ./api.php:/var/www/html/api.php:ro
       - ./LookingGlass.php:/var/www/html/LookingGlass.php:ro
-      - ./config.php:/var/www/html/config.php:ro
-      - ./acme-challenge:/var/www/html/.well-known/acme-challenge:ro
     depends_on:
       - api
     restart: unless-stopped

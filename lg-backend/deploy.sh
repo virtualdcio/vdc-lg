@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -e
 
 echo "🚀 Deploying Looking Glass Backend with SSL..."
@@ -31,7 +30,7 @@ if [ "$KEY_PERMISSIONS" != "600" ] && [ "$KEY_PERMISSIONS" != "400" ]; then
     chmod 600 ssl/STAR.vdc.ru.key
 fi
 
-# Создаем config.php
+# Создаем config.php с ПРАВИЛЬНЫМ JSON
 echo "📝 Generating config.php..."
 cat > config.php << EOF
 <?php
@@ -39,9 +38,16 @@ cat > config.php << EOF
 define('LG_LOCATION', '${LOCATION:-RU}');
 define('LG_IPV4', '${IPV4:-127.0.0.1}');
 define('LG_IPV6', '${IPV6:-::1}');
-define('LG_METHODS', json_decode('${METHODS:-["ping","traceroute","mtr"]}', true));
+
+// ПРАВИЛЬНЫЙ JSON формат
+\$methodsJson = '${METHODS:-["ping","traceroute","mtr"]}';
+\$methods = json_decode(\$methodsJson, true);
+define('LG_METHODS', is_array(\$methods) ? \$methods : ['ping','traceroute','mtr']);
+
 define('LG_ALLOWED_ORIGIN', '${ALLOWED_ORIGIN:-https://vdc.ru}');
 EOF
+
+echo "✅ Config generated with proper JSON format"
 
 mkdir -p acme-challenge
 
