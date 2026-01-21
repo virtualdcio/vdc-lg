@@ -1,41 +1,40 @@
-# docker-compose.yml - ИСПРАВЛЕННАЯ ВЕРСИЯ
+# docker-compose.yml - ВЕРСИЯ С NETWORK_MODE: HOST
 version: '3.8'
 
 services:
   api:
     build: .
     container_name: lg-${LOCATION:-ru}-api
+    network_mode: host  # ← ДОБАВЛЯЕМ ЭТУ СТРОКУ
     environment:
       - LOCATION=${LOCATION:-RU}
       - IPV4=${IPV4:-127.0.0.1}
       - IPV6=${IPV6:-::1}
       - METHODS=${METHODS:-["ping","traceroute","mtr"]}
       - ALLOWED_ORIGIN=${ALLOWED_ORIGIN:-https://vdc.ru}
-    # ДОБАВЛЯЕМ монтирование config.php
     volumes:
       - ./config.php:/var/www/html/config.php:ro
+      # ДОБАВЛЯЕМ монтирование других PHP файлов тоже
+      - ./api.php:/var/www/html/api.php:ro
+      - ./LookingGlass.php:/var/www/html/LookingGlass.php:ro
     restart: unless-stopped
-    networks:
-      - lg-network
+    # УБИРАЕМ секцию networks - несовместимо с network_mode: host
 
   nginx:
     image: nginx:alpine
     container_name: lg-${LOCATION:-ru}-nginx
-    ports:
-      - "${HTTP_PORT:-80}:80"
-      - "${HTTPS_PORT:-443}:443"
+    network_mode: host  # ← ДОБАВЛЯЕМ ЭТУ СТРОКУ
+    # УБИРАЕМ ports - при network_mode: host порты открываются напрямую
     volumes:
       - ./nginx-ssl.conf:/etc/nginx/conf.d/default.conf:ro
       - ./ssl:/etc/ssl:ro
-      # УДАЛЯЕМ config.php отсюда, он нужен только в PHP-FPM
       - ./api.php:/var/www/html/api.php:ro
       - ./LookingGlass.php:/var/www/html/LookingGlass.php:ro
+      # ОБЯЗАТЕЛЬНО монтируем config.php и для nginx тоже
+      - ./config.php:/var/www/html/config.php:ro
     depends_on:
       - api
     restart: unless-stopped
-    networks:
-      - lg-network
+    # УБИРАЕМ секцию networks - несовместимо с network_mode: host
 
-networks:
-  lg-network:
-    driver: bridge
+# УБИРАЕМ секцию networks - не нужно при network_mode: host
