@@ -1,0 +1,14 @@
+# Docker
+.env
+config.php
+acme-challenge/
+*.log
+
+# SSL (опционально - если не хотите коммитить)
+# ssl/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест Looking Glass Widget</title>
+
+    <!-- Стили виджета -->
+    <link rel="stylesheet" href="lg-widget.css">
+
+    <!-- Дополнительные стили для демо-страницы -->
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .demo-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eaeaea;
+        }
+
+        .demo-header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+
+        .demo-header p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+
+        .demo-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .demo-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .widget-section {
+            background: #fff;
+            border-radius: 10px;
+            padding: 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .controls-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .controls-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        .control-group h3 {
+            color: #34495e;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .test-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .test-button {
+            padding: 12px 15px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .test-button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .test-button.danger {
+            background: #e74c3c;
+        }
+
+        .test-button.danger:hover {
+            background: #c0392b;
+        }
+
+        .test-button.success {
+            background: #2ecc71;
+        }
+
+        .test-button.success:hover {
+            background: #27ae60;
+        }
+
+        .instructions {
+            background: #e8f4fc;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            border-radius: 0 6px 6px 0;
+            margin-top: 25px;
+        }
+
+        .instructions h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            padding-left: 20px;
+            color: #5d6d7e;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        .demo-footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eaeaea;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .location-badges {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .location-badge {
+            padding: 8px 15px;
+            background: #ecf0f1;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #2c3e50;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .location-badge:hover {
+            background: #3498db;
+            color: white;
+        }
+
+        .location-badge.active {
+            background: #3498db;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+<div class="demo-container">
+    <!-- Заголовок -->
+    <header class="demo-header">
+        <h1>🔍 VDC Looking Glass Widget</h1>
+        <p>Виджет для диагностики сети из разных локаций</p>
+    </header>
+
+    <!-- Основной контент -->
+    <div class="demo-content">
+        <!-- Виджет -->
+        <section class="widget-section">
+            <div id="lg-container"></div>
+        </section>
+
+        <!-- Панель управления -->
+        <section class="controls-section">
+            <h2>⚙️ Управление виджетом</h2>
+
+            <!-- Быстрые тесты -->
+            <div class="control-group">
+                <h3>🚀 Быстрые тесты</h3>
+                <div class="test-buttons">
+                    <button class="test-button" onclick="testPing()">
+                        Ping Google
+                    </button>
+                    <button class="test-button" onclick="testTraceroute()">
+                        Traceroute Cloudflare
+                    </button>
+                    <button class="test-button success" onclick="testIPv6()">
+                        Ping IPv6
+                    </button>
+                    <button class="test-button" onclick="testMTR()">
+                        MTR Test
+                    </button>
+                </div>
+            </div>
+
+            <!-- Переключение локаций -->
+            <div class="control-group">
+                <h3>📍 Переключение локаций</h3>
+                <div class="location-badges">
+                    <div class="location-badge active" onclick="switchLocation('RU')">
+                        Москва (RU)
+                    </div>
+                    <div class="location-badge" onclick="switchLocation('LV')">
+                        Рига (LV)
+                    </div>
+                </div>
+            </div>
+
+            <!-- Управление виджетом -->
+            <div class="control-group">
+                <h3>🎛️ Управление</h3>
+                <div class="test-buttons">
+                    <button class="test-button" onclick="setCustomTarget()">
+                        Задать свой хост
+                    </button>
+                    <button class="test-button danger" onclick="cancelExecution()">
+                        Отменить выполнение
+                    </button>
+                    <button class="test-button" onclick="clearResults()">
+                        Очистить результаты
+                    </button>
+                    <button class="test-button" onclick="getWidgetInfo()">
+                        Информация о виджете
+                    </button>
+                </div>
+            </div>
+
+            <!-- Инструкция -->
+            <div class="instructions">
+                <h3>📖 Как использовать:</h3>
+                <ul>
+                    <li>Выберите локацию для диагностики</li>
+                    <li>Введите IP-адрес или домен для проверки</li>
+                    <li>Выберите метод диагностики</li>
+                    <li>Нажмите "Выполнить"</li>
+                    <li>Результаты появятся в нижней части виджета</li>
+                </ul>
+            </div>
+        </section>
+    </div>
+
+    <!-- Футер -->
+    <footer class="demo-footer">
+        <p>VDC Looking Glass Widget v1.0 | Интеграция на ваш сайт за 5 минут</p>
+    </footer>
+</div>
+
+<!-- Подключаем виджет -->
+<script src="lg-widget.js"></script>
+
+<!-- Инициализация и управление -->
+<script>
+    // Глобальная переменная для доступа к виджету
+    let lgWidget;
+
+    // Инициализация виджета при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        // Конфигурация виджета
+        const config = {
+            container: '#lg-container',
+            locations: {
+                'RU': {
+                    name: 'Москва',
+                    apiUrl: 'https://lg-ru.vdc.ru/api.php',
+                    ipv4: '95.167.235.235',
+                    ipv6: '2a02:17d0:1b1::235'
+                },
+                'LV': {
+                    name: 'Рига',
+                    apiUrl: 'https://lg-lv.vdc.ru/api.php',
+                    ipv4: '87.246.148.227',
+                    ipv6: '2a02:17d0:1b2::227'
+                }
+            },
+            defaultLocation: 'RU',
+            theme: 'light',
+            autoDetectIP: true
+        };
+
+        // Создаем виджет
+        lgWidget = new LookingGlassWidget(config);
+
+        // Обновляем активные бейджи локаций
+        updateLocationBadges();
+
+        console.log('✅ Looking Glass Widget инициализирован');
+    });
+
+    // === Функции управления виджетом ===
+
+    // Быстрые тесты
+    function testPing() {
+        lgWidget.setTarget('8.8.8.8');
+        lgWidget.setMethod('ping');
+        alert('✅ Настроен тест: Ping 8.8.8.8\nНажмите "Выполнить" в виджете');
+    }
+
+    function testTraceroute() {
+        lgWidget.setTarget('1.1.1.1');
+        lgWidget.setMethod('traceroute');
+        alert('✅ Настроен тест: Traceroute 1.1.1.1\nНажмите "Выполнить" в виджете');
+    }
+
+    function testIPv6() {
+        lgWidget.setTarget('2001:4860:4860::8888');
+        lgWidget.setMethod('ping6');
+        alert('✅ Настроен тест: Ping IPv6 (Google DNS)\nНажмите "Выполнить" в виджете');
+    }
+
+    function testMTR() {
+        lgWidget.setTarget('8.8.8.8');
+        lgWidget.setMethod('mtr');
+        alert('✅ Настроен тест: MTR 8.8.8.8\nНажмите "Выполнить" в виджете');
+    }
+
+    // Переключение локаций
+    function switchLocation(locationCode) {
+        lgWidget.setLocation(locationCode);
+        updateLocationBadges();
+    }
+
+    function updateLocationBadges() {
+        // Обновляем активный бейдж
+        document.querySelectorAll('.location-badge').forEach(badge => {
+            badge.classList.remove('active');
+            if (badge.textContent.includes(lgWidget.getCurrentLocation())) {
+                badge.classList.add('active');
+            }
+        });
+    }
+
+    // Управление виджетом
+    function setCustomTarget() {
+        const target = prompt('Введите IP адрес или домен для проверки:', 'google.com');
+        if (target) {
+            lgWidget.setTarget(target);
+            alert(`✅ Цель установлена: ${target}\nВыберите метод и нажмите "Выполнить"`);
+        }
+    }
+
+    function cancelExecution() {
+        lgWidget.cancelExecution();
+        alert('✅ Команда на отмену отправлена');
+    }
+
+    function clearResults() {
+        lgWidget.clearResults();
+        alert('✅ Результаты очищены');
+    }
+
+    function getWidgetInfo() {
+        const info = `
+Текущая локация: ${lgWidget.getCurrentLocation()}
+Всего локаций: ${Object.keys(lgWidget.config.locations).length}
+Автоопределение IP: ${lgWidget.config.autoDetectIP ? 'Включено' : 'Выключено'}
+Тема: ${lgWidget.config.theme}
+            `.trim();
+
+        alert('📊 Информация о виджете:\n' + info);
+    }
+
+    // Экспортируем виджет в глобальную область видимости
+    window.lgWidget = lgWidget;
+    window.testPing = testPing;
+    window.testTraceroute = testTraceroute;
+    window.testIPv6 = testIPv6;
+    window.testMTR = testMTR;
+    window.switchLocation = switchLocation;
+    window.setCustomTarget = setCustomTarget;
+    window.cancelExecution = cancelExecution;
+    window.clearResults = clearResults;
+    window.getWidgetInfo = getWidgetInfo;
+</script>
+</body>
+</html>

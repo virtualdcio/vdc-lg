@@ -1,0 +1,300 @@
+/* ============================================
+   VDC Looking Glass Widget Styles
+   Минималистичные стили для виджета
+   ============================================ */
+
+/* Основной контейнер */
+.lg-widget {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    max-width: 1000px;
+    margin: 20px auto;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Заголовок */
+.lg-header {
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 15px;
+}
+
+.lg-title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Выбор локации */
+.lg-location-selector {
+    margin-bottom: 20px;
+}
+
+.lg-location-tabs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.lg-location-tab {
+    padding: 8px 16px;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.lg-location-tab:hover {
+    background: #e8e8e8;
+}
+
+.lg-location-tab.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+/* Сетевая информация */
+.lg-network-info {
+    background: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.lg-network-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.lg-network-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.lg-network-field label {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.lg-input-group {
+    display: flex;
+    gap: 5px;
+}
+
+.lg-input-group input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 13px;
+}
+
+.lg-copy-btn {
+    padding: 8px 12px;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.2s;
+    min-width: 80px;
+}
+
+.lg-copy-btn:hover {
+    background: #5a6268;
+}
+
+/* Форма */
+.lg-form-container {
+    margin-bottom: 20px;
+}
+
+.lg-form-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 10px;
+}
+
+@media (max-width: 768px) {
+    .lg-form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.lg-form-group {
+    display: flex;
+}
+
+.lg-target-input {
+    flex: 1;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    min-width: 200px;
+}
+
+.lg-method-select {
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    font-size: 14px;
+    min-width: 150px;
+}
+
+.lg-execute-btn {
+    padding: 10px 20px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.2s;
+    min-width: 120px;
+}
+
+.lg-execute-btn:hover:not(:disabled) {
+    background: #0056b3;
+}
+
+.lg-execute-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+.lg-cancel-btn {
+    padding: 10px 20px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.2s;
+    min-width: 100px;
+}
+
+.lg-cancel-btn:hover {
+    background: #c82333;
+}
+
+/* Результаты */
+.lg-results-container {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 20px;
+}
+
+.lg-results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #ddd;
+}
+
+.lg-results-header h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.lg-clear-btn {
+    padding: 5px 10px;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.lg-clear-btn:hover {
+    background: #5a6268;
+}
+
+.lg-results-output {
+    margin: 0;
+    padding: 15px;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    max-height: 400px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+/* Статус */
+.lg-status {
+    margin-top: 15px;
+    padding: 10px 15px;
+    border-radius: 4px;
+    font-size: 14px;
+    display: none;
+}
+
+.lg-status.lg-status-success {
+    display: block;
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.lg-status.lg-status-error {
+    display: block;
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.lg-status.lg-status-info {
+    display: block;
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 600px) {
+    .lg-widget {
+        padding: 15px;
+    }
+
+    .lg-network-row {
+        grid-template-columns: 1fr;
+    }
+
+    .lg-input-group {
+        flex-direction: column;
+    }
+
+    .lg-copy-btn {
+        width: 100%;
+        margin-top: 5px;
+    }
+}
