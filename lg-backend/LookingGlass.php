@@ -339,6 +339,8 @@ class LookingGlass
         if ($cmd[0] == 'mtr' || $cmd[0] == 'mtr6') {
             $type = 'mtr';
             $parser = new Parser();
+            // Переменная для хранения последнего вывода MTR в plain text режиме
+            $lastMtrOutput = '';
         } elseif ($cmd[0] == 'traceroute' || $cmd[0] == 'traceroute6' ) {
             $type = 'traceroute';
         } else {
@@ -373,7 +375,17 @@ class LookingGlass
             if ($type === 'mtr') {
                 // correct output for mtr
                 $parser->update($str);
-                echo '@@@'.PHP_EOL.$parser->__toString().PHP_EOL.str_pad('', 4096).$lineEnding;
+
+                // В plain text режиме не выводим промежуточные состояния, только сохраняем последний результат
+                if (self::$plainTextMode) {
+                    // Сохраняем последний вывод парсера в переменную
+                    $lastMtrOutput = $parser->__toString();
+                    // Не выводим сразу, только обновляем парсер
+                    continue;
+                } else {
+                    // Для веб-интерфейса выводим как обычно (режим реального времени)
+                    echo '@@@'.PHP_EOL.$parser->__toString().PHP_EOL.str_pad('', 4096).$lineEnding;
+                }
 
                 // flush output buffering
                 @ob_flush();
@@ -408,6 +420,11 @@ class LookingGlass
             flush();
         }
 
+        // В plain text режиме для MTR выводим только финальный результат
+        if (self::$plainTextMode && $type === 'mtr' && !empty($lastMtrOutput)) {
+            echo $lastMtrOutput;
+        }
+
         // iterate stderr
         while (($err = fgets($pipes[2], 4096)) != null) {
             // check for IPv6 hostname passed to IPv4 command, and vice versa
@@ -424,15 +441,31 @@ class LookingGlass
                 fclose($pipe);
             }
             if ($status['pid']) {
-                // use ps to get all the children of this process
-                $psOutput = shell_exec('ps -o pid= --no-heading --ppid ' . (int)$status['pid']);
+                // Исправление для BusyBox: используем совместимую команду ps
+                // BusyBox ps не поддерживает --no-heading, используем другой подход
+                $psOutput = shell_exec('ps -o pid,ppid');
                 if ($psOutput !== null) {
-                    // Split the output into lines and filter numeric PIDs
-                    $pids = preg_split('/\s+/', trim($psOutput));
+                    // Разбираем вывод ps для поиска дочерних процессов
+                    $lines = explode(PHP_EOL, trim($psOutput));
+                    $pids = [];
 
+                    foreach ($lines as $line) {
+                        $line = trim($line);
+                        // Пропускаем заголовок если есть
+                        if (preg_match('/^\s*(\d+)\s+(\d+)\s*$/', $line, $matches)) {
+                            $pid = (int)$matches[1];
+                            $ppid = (int)$matches[2];
+                            // Если родительский PID совпадает с нашим процессом
+                            if ($ppid === (int)$status['pid']) {
+                                $pids[] = $pid;
+                            }
+                        }
+                    }
+
+                    // Убиваем дочерние процессы
                     foreach ($pids as $pid) {
-                        if (is_numeric($pid)) {
-                            posix_kill((int)$pid, 9);
+                        if ($pid > 0) {
+                            posix_kill($pid, 9);
                         }
                     }
                 }
