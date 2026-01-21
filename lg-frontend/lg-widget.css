@@ -298,3 +298,160 @@
         margin-top: 5px;
     }
 }
+
+/* Прогресс-индикатор для MTR */
+.lg-progress-container {
+    margin: 15px 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #3498db;
+}
+
+.lg-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.lg-progress-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.lg-progress-percentage {
+    font-size: 12px;
+    color: #7f8c8d;
+    font-weight: 500;
+}
+
+.lg-progress-bar {
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.lg-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3498db, #2ecc71);
+    width: 0%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.lg-progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background-image: linear-gradient(
+            45deg,
+            rgba(255, 255, 255, 0.15) 25%,
+            transparent 25%,
+            transparent 50%,
+            rgba(255, 255, 255, 0.15) 50%,
+            rgba(255, 255, 255, 0.15) 75%,
+            transparent 75%,
+            transparent
+    );
+    background-size: 1rem 1rem;
+    animation: lg-progress-stripes 1s linear infinite;
+}
+
+.lg-progress-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 5px;
+    font-size: 11px;
+    color: #95a5a6;
+}
+
+.lg-progress-step {
+    flex: 1;
+    text-align: center;
+    padding: 2px;
+}
+
+.lg-progress-step.active {
+    color: #3498db;
+    font-weight: 600;
+}
+
+/* Анимация для полосатого эффекта */
+@keyframes lg-progress-stripes {
+    0% {
+        background-position: 1rem 0;
+    }
+    100% {
+        background-position: 0 0;
+    }
+}
+
+/* Анимированные точки для общего статуса */
+.lg-status-animated::after {
+    content: '...';
+    display: inline-block;
+    width: 20px;
+    animation: lg-dots 1.5s steps(4, end) infinite;
+}
+
+@keyframes lg-dots {
+    0%, 20% { content: ''; }
+    40% { content: '.'; }
+    60% { content: '..'; }
+    80%, 100% { content: '...'; }
+}
+
+/* Улучшенный статус для MTR */
+.lg-mtr-status {
+    background: #e8f4fc;
+    border-radius: 6px;
+    padding: 10px;
+    margin: 10px 0;
+    border-left: 4px solid #3498db;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.lg-mtr-status-icon {
+    font-size: 16px;
+}
+
+.lg-mtr-status-text {
+    flex: 1;
+}
+
+/* Компактный прогресс-индикатор */
+.lg-progress-compact {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.lg-progress-spinner {
+    width: 12px;
+    height: 12px;
+    border: 2px solid #e0e0e0;
+    border-top-color: #3498db;
+    border-radius: 50%;
+    animation: lg-spin 1s linear infinite;
+}
+
+@keyframes lg-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

@@ -1,6 +1,7 @@
 /**
  * VDC Looking Glass Widget
  * Минималистичный виджет для диагностики сети
+ * Версия 1.1 с прогресс-индикатором для MTR
  */
 
 class LookingGlassWidget {
@@ -18,6 +19,8 @@ class LookingGlassWidget {
         this.userIP = null;
         this.isExecuting = false;
         this.abortController = null;
+        this.mtrProgressInterval = null;
+        this.currentProgress = 0;
 
         // DOM элементы
         this.elements = {};
@@ -85,6 +88,34 @@ class LookingGlassWidget {
                             ${this.generateFormFields()}
                         </div>
                     </form>
+                </div>
+                
+                <!-- Прогресс-индикатор (скрыт по умолчанию) -->
+                <div class="lg-progress-container" style="display: none;">
+                    <div class="lg-progress-header">
+                        <span class="lg-progress-title">Выполнение MTR</span>
+                        <span class="lg-progress-percentage">0%</span>
+                    </div>
+                    <div class="lg-progress-bar">
+                        <div class="lg-progress-fill"></div>
+                    </div>
+                    <div class="lg-progress-steps">
+                        <div class="lg-progress-step active">Старт</div>
+                        <div class="lg-progress-step">Сбор хопов</div>
+                        <div class="lg-progress-step">Отправка пакетов</div>
+                        <div class="lg-progress-step">Анализ</div>
+                        <div class="lg-progress-step">Завершение</div>
+                    </div>
+                </div>
+                
+                <!-- Статус MTR -->
+                <div class="lg-mtr-status" style="display: none;">
+                    <span class="lg-mtr-status-icon">🔄</span>
+                    <span class="lg-mtr-status-text">Инициализация MTR...</span>
+                    <div class="lg-progress-compact">
+                        <div class="lg-progress-spinner"></div>
+                        <span>0%</span>
+                    </div>
                 </div>
                 
                 <!-- Результаты -->
@@ -190,7 +221,14 @@ class LookingGlassWidget {
             resultsOutput: document.querySelector('.lg-results-output'),
             statusDiv: document.querySelector('.lg-status'),
             form: document.querySelector('.lg-form'),
-            copyButtons: document.querySelectorAll('.lg-copy-btn')
+            copyButtons: document.querySelectorAll('.lg-copy-btn'),
+            progressContainer: document.querySelector('.lg-progress-container'),
+            progressFill: document.querySelector('.lg-progress-fill'),
+            progressPercentage: document.querySelector('.lg-progress-percentage'),
+            progressSteps: document.querySelectorAll('.lg-progress-step'),
+            mtrStatus: document.querySelector('.lg-mtr-status'),
+            mtrStatusText: document.querySelector('.lg-mtr-status-text'),
+            mtrProgressCompact: document.querySelector('.lg-progress-compact span')
         };
     }
 
@@ -225,6 +263,11 @@ class LookingGlassWidget {
         this.elements.clearBtn.addEventListener('click', () => {
             this.clearResults();
         });
+
+        // Изменение метода диагностики
+        this.elements.methodSelect.addEventListener('change', () => {
+            this.hideProgressIndicator();
+        });
     }
 
     // Определение IP пользователя
@@ -255,6 +298,7 @@ class LookingGlassWidget {
         this.currentLocation = locationCode;
         this.updateLocationInfo();
         this.clearResults();
+        this.hideProgressIndicator();
     }
 
     // Обновление информации о локации
@@ -309,13 +353,90 @@ class LookingGlassWidget {
         // Начинаем выполнение
         this.startExecution();
 
+        // Особый обработчик для MTR
+        if (this.isMTRCommand(method)) {
+            this.showMTRProgressIndicator();
+            this.appendOutput(`🚀 Запуск MTR к ${target}...\n`);
+            this.appendOutput(`⏳ Выполняется отправка 10 пакетов на каждый хоп...\n`);
+            this.appendOutput(`📊 Ожидаемое время выполнения: 10-15 секунд\n\n`);
+        }
+
         try {
             await this.fetchAndStreamResults(location.apiUrl, target, method);
-            this.showStatus('Готово', 'success');
+
+            if (this.isMTRCommand(method)) {
+                this.showStatus('MTR успешно выполнен', 'success');
+                this.appendOutput(`\n✅ MTR завершен успешно!\n`);
+            } else {
+                this.showStatus('Готово', 'success');
+            }
         } catch (error) {
             this.handleExecutionError(error);
         } finally {
             this.finishExecution();
+        }
+    }
+
+    // Проверка, является ли команда MTR
+    isMTRCommand(method) {
+        return method === 'mtr' || method === 'mtr6';
+    }
+
+    // Показать прогресс-индикатор для MTR
+    showMTRProgressIndicator() {
+        this.currentProgress = 0;
+
+        // Показываем контейнер прогресса
+        this.elements.progressContainer.style.display = 'block';
+        this.elements.mtrStatus.style.display = 'flex';
+
+        // Запускаем анимацию прогресса
+        this.mtrProgressInterval = setInterval(() => {
+            if (this.currentProgress < 90) {
+                this.currentProgress += Math.random() * 5 + 1; // Увеличиваем случайно
+                if (this.currentProgress > 90) this.currentProgress = 90;
+                this.updateProgressBar();
+
+                // Обновляем текст статуса на разных этапах
+                if (this.currentProgress < 25) {
+                    this.elements.mtrStatusText.textContent = 'Определение маршрута...';
+                } else if (this.currentProgress < 50) {
+                    this.elements.mtrStatusText.textContent = 'Сбор информации о хопах...';
+                } else if (this.currentProgress < 75) {
+                    this.elements.mtrStatusText.textContent = 'Отправка пакетов...';
+                } else {
+                    this.elements.mtrStatusText.textContent = 'Анализ результатов...';
+                }
+            }
+        }, 300);
+    }
+
+    // Обновить прогресс-бар
+    updateProgressBar() {
+        this.currentProgress = Math.min(100, Math.max(0, this.currentProgress));
+
+        // Обновляем ширину заполнения
+        this.elements.progressFill.style.width = `${this.currentProgress}%`;
+
+        // Обновляем процент
+        this.elements.progressPercentage.textContent = `${Math.round(this.currentProgress)}%`;
+        this.elements.mtrProgressCompact.textContent = `${Math.round(this.currentProgress)}%`;
+
+        // Обновляем активные шаги
+        const stepIndex = Math.floor(this.currentProgress / 20);
+        this.elements.progressSteps.forEach((step, index) => {
+            step.classList.toggle('active', index <= stepIndex);
+        });
+    }
+
+    // Скрыть прогресс-индикатор
+    hideProgressIndicator() {
+        this.elements.progressContainer.style.display = 'none';
+        this.elements.mtrStatus.style.display = 'none';
+
+        if (this.mtrProgressInterval) {
+            clearInterval(this.mtrProgressInterval);
+            this.mtrProgressInterval = null;
         }
     }
 
@@ -325,6 +446,7 @@ class LookingGlassWidget {
         this.elements.executeBtn.disabled = true;
         this.elements.cancelBtn.style.display = 'inline-block';
         this.elements.statusDiv.textContent = 'Выполняется...';
+        this.elements.statusDiv.classList.add('lg-status-animated');
         this.abortController = new AbortController();
         this.clearResults();
     }
@@ -334,7 +456,21 @@ class LookingGlassWidget {
         this.isExecuting = false;
         this.elements.executeBtn.disabled = false;
         this.elements.cancelBtn.style.display = 'none';
+        this.elements.statusDiv.classList.remove('lg-status-animated');
         this.abortController = null;
+
+        // Завершаем прогресс-бар для MTR
+        if (this.isMTRCommand(this.elements.methodSelect.value)) {
+            this.currentProgress = 100;
+            this.updateProgressBar();
+
+            // Скрываем прогресс через 2 секунды
+            setTimeout(() => {
+                this.hideProgressIndicator();
+            }, 2000);
+        } else {
+            this.hideProgressIndicator();
+        }
     }
 
     // Получение и потоковая обработка результатов
@@ -370,12 +506,25 @@ class LookingGlassWidget {
             this.showStatus(`Ошибка: ${error.message}`, 'error');
             this.appendOutput(`\n--- Ошибка: ${error.message} ---\n`);
         }
+
+        // Сбрасываем прогресс при ошибке
+        if (this.isMTRCommand(this.elements.methodSelect.value)) {
+            this.currentProgress = 0;
+            this.updateProgressBar();
+        }
     }
 
     // Отмена выполнения
     cancelExecution() {
         if (this.abortController && !this.abortController.signal.aborted) {
             this.abortController.abort();
+        }
+
+        // Сбрасываем прогресс
+        if (this.isMTRCommand(this.elements.methodSelect.value)) {
+            this.currentProgress = 0;
+            this.updateProgressBar();
+            this.elements.mtrStatusText.textContent = 'Отменено пользователем';
         }
     }
 
@@ -420,6 +569,7 @@ class LookingGlassWidget {
 
     setMethod(method) {
         this.elements.methodSelect.value = method;
+        this.hideProgressIndicator();
     }
 }
 
