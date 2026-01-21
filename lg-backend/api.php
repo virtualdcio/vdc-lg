@@ -80,24 +80,11 @@ if (in_array($method, ['ping6', 'mtr6', 'traceroute6'])) {
     }
 }
 
-// Функция очистки вывода от HTML
-function cleanOutput($buffer) {
-    // Убираем HTML теги
-    $buffer = strip_tags($buffer);
-    // Заменяем &nbsp; на обычные пробелы
-    $buffer = str_replace('&nbsp;', ' ', $buffer);
-    // Заменяем HTML-сущности
-    $buffer = html_entity_decode($buffer, ENT_QUOTES, 'UTF-8');
-    return $buffer;
-}
-
-// Включаем буферизацию с callback для очистки вывода
-ob_start('cleanOutput');
-
-// Выполняем команду
+// Выполняем команду с перехватом вывода
 set_time_limit(120);
-ob_implicit_flush(true);
-ob_end_flush();
+
+// Включаем буферизацию вывода
+ob_start();
 
 try {
     switch ($method) {
@@ -129,5 +116,21 @@ try {
     echo "Error: " . $e->getMessage();
 }
 
-// Очищаем буфер
-ob_end_flush();
+// Получаем вывод из буфера
+$output = ob_get_clean();
+
+// Очищаем вывод от HTML
+if ($output) {
+    // Убираем HTML теги
+    $output = strip_tags($output);
+    // Заменяем &nbsp; на обычные пробелы
+    $output = str_replace('&nbsp;', ' ', $output);
+    // Заменяем HTML-сущности
+    $output = html_entity_decode($output, ENT_QUOTES, 'UTF-8');
+    // Убираем множественные пробелы и переносы
+    $output = preg_replace('/\s+/', ' ', $output);
+    $output = trim($output);
+}
+
+// Отправляем очищенный вывод
+echo $output;
