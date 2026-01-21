@@ -36,20 +36,6 @@ class LookingGlass
 
     private const MTR_COUNT = 10;
 
-    // Флаг для определения режима вывода
-    private static $plainTextMode = false;
-
-    /**
-     * Устанавливает режим вывода в plain text (без HTML)
-     *
-     * @param bool $enabled
-     * @return void
-     */
-    public static function setPlainTextMode(bool $enabled): void
-    {
-        self::$plainTextMode = $enabled;
-    }
-
     /**
      * Validates the config.php file for required constants.
      *
@@ -349,11 +335,6 @@ class LookingGlass
         $match = 0;
         $traceCount = 0;
         $lastFail = 'start';
-
-        // Выбираем форматирование в зависимости от режима
-        $lineEnding = self::$plainTextMode ? PHP_EOL : '<br />';
-        $indent = self::$plainTextMode ? '  ' : '&nbsp;';
-
         // iterate stdout
         while (($str = fgets($pipes[1], 4096)) != null) {
             // check for output buffer
@@ -361,19 +342,14 @@ class LookingGlass
                 ob_start();
             }
 
-            // В plain text режиме не нужно экранировать HTML
-            if (self::$plainTextMode) {
-                $str = trim($str);
-            } else {
-                // fix RDNS XSS (outputs non-breakble space correctly)
-                $str = htmlspecialchars(trim($str));
-            }
+            // fix RDNS XSS (outputs non-breakble space correctly)
+            $str = htmlspecialchars(trim($str));
 
             // correct output for mtr
             if ($type === 'mtr') {
                 // correct output for mtr
                 $parser->update($str);
-                echo '@@@'.PHP_EOL.$parser->__toString().PHP_EOL.str_pad('', 4096).$lineEnding;
+                echo '@@@'.PHP_EOL.$parser->__toString().PHP_EOL.str_pad('', 4096).PHP_EOL;
 
                 // flush output buffering
                 @ob_flush();
@@ -382,7 +358,7 @@ class LookingGlass
             } // correct output for traceroute
             elseif ($type === 'traceroute') {
                 if ($match < 10 && preg_match('/^[0-9] /', $str, $string)) {
-                    $str = preg_replace('/^[0-9] /', $indent.$string[0], $str);
+                    $str = preg_replace('/^[0-9] /', '&nbsp;'.$string[0], $str);
                     $match++;
                 }
                 // check for consecutive failed hops
@@ -392,7 +368,7 @@ class LookingGlass
                         && ($traceCount - 1) === $lastFail
                         && $fail >= $failCount
                     ) {
-                        echo str_pad($str.$lineEnding.'-- Traceroute timed out --'.$lineEnding, 4096, ' ', STR_PAD_RIGHT);
+                        echo str_pad($str.'<br />-- Traceroute timed out --<br />', 4096, ' ', STR_PAD_RIGHT);
                         break;
                     }
                     $lastFail = $traceCount;
@@ -401,7 +377,7 @@ class LookingGlass
             }
 
             // pad string for live output
-            echo str_pad($str.$lineEnding, 4096, ' ', STR_PAD_RIGHT);
+            echo str_pad($str.'<br />', 4096, ' ', STR_PAD_RIGHT);
 
             // flush output buffering
             @ob_flush();

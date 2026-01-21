@@ -6,6 +6,9 @@ require_once 'config.php';
 
 use Hybula\LookingGlass;
 
+// Устанавливаем режим plain text для API
+LookingGlass::setPlainTextMode(true);
+
 // Безопасность
 header('Content-Type: text/plain');
 header('X-Accel-Buffering: no');
@@ -119,17 +122,16 @@ try {
 // Получаем вывод из буфера
 $output = ob_get_clean();
 
-// Очищаем вывод от HTML
+// Дополнительная очистка вывода (на всякий случай)
 if ($output) {
-    // Убираем HTML теги
+    // Убираем HTML теги (если что-то осталось)
     $output = strip_tags($output);
-    // Заменяем &nbsp; на обычные пробелы
-    $output = str_replace('&nbsp;', ' ', $output);
-    // Заменяем HTML-сущности
-    $output = html_entity_decode($output, ENT_QUOTES, 'UTF-8');
-    // Убираем множественные пробелы и переносы
-    $output = preg_replace('/\s+/', ' ', $output);
-    $output = trim($output);
+    // Заменяем оставшиеся HTML-сущности
+    $output = html_entity_decode($output, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    // Убираем лишние пробелы в начале/конце строк
+    $lines = explode("\n", $output);
+    $lines = array_map('trim', $lines);
+    $output = implode("\n", $lines);
 }
 
 // Отправляем очищенный вывод
