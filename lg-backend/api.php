@@ -4,13 +4,24 @@
  * Обработчик запросов на выполнение диагностических команд
  */
 
-// Включаем CORS заголовки
+// Включаем буферизацию вывода для потоковой передачи
+ob_implicit_flush(true);
+ob_start();
+
+// Устанавливаем максимальное время выполнения
+set_time_limit(120);
+
+// Устанавливаем заголовки CORS и другие заголовки
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Accept');
+header('Access-Control-Allow-Headers: Content-Type, Accept, X-Requested-With');
 header('Access-Control-Max-Age: 86400');
+header('Content-Type: text/plain; charset=utf-8');
+header('Cache-Control: no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
 
-// Обработка предварительного OPTIONS запроса
+// Обработка предварительного OPTIONS запроса (CORS preflight)
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
@@ -26,22 +37,24 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // Подключаем LookingGlass
 require_once __DIR__ . '/LookingGlass.php';
 
-// Устанавливаем заголовки для предотвращения кеширования
-header('Content-Type: text/plain; charset=utf-8');
-header('Cache-Control: no-cache, no-store, must-revalidate');
-header('Pragma: no-cache');
-header('Expires: 0');
-
-// Включаем буферизацию вывода для потоковой передачи
-ob_implicit_flush(true);
-ob_start();
-
-// Устанавливаем максимальное время выполнения
-set_time_limit(120);
+// Всегда устанавливаем plain text режим
+Hybula\LookingGlass::setPlainTextMode(true);
 
 // Парсим входные данные
 $input = file_get_contents('php://input');
+if (empty($input)) {
+    http_response_code(400);
+    echo "Ошибка: Пустой запрос";
+    exit;
+}
+
 $data = json_decode($input, true);
+
+if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
+    http_response_code(400);
+    echo "Ошибка: Неверный формат JSON";
+    exit;
+}
 
 // Проверяем наличие обязательных параметров
 if (!isset($data['target']) || !isset($data['method'])) {
@@ -60,6 +73,13 @@ if (empty($target)) {
     exit;
 }
 
+// Защита от потенциально опасных символов
+if (preg_match('/[;&|`\'"]/', $target)) {
+    http_response_code(400);
+    echo "Ошибка: Недопустимые символы в цели";
+    exit;
+}
+
 // Валидация метода
 $allowedMethods = ['ping', 'ping6', 'traceroute', 'traceroute6', 'mtr', 'mtr6'];
 if (!in_array($method, $allowedMethods)) {
@@ -68,10 +88,6 @@ if (!in_array($method, $allowedMethods)) {
     exit;
 }
 
-// Устанавливаем plain text режим для LookingGlass
-Hybula\LookingGlass::setPlainTextMode(true);
-
-// Выполняем команду в зависимости от метода
 try {
     switch ($method) {
         case 'ping':
@@ -100,6 +116,10 @@ try {
 } catch (Exception $e) {
     http_response_code(500);
     echo "Ошибка выполнения: " . $e->getMessage();
+    exit;
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo "Критическая ошибка: " . $e->getMessage();
     exit;
 }
 
