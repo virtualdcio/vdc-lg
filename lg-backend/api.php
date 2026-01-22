@@ -4,6 +4,26 @@
  * Обработчик запросов на выполнение диагностических команд
  */
 
+// Включаем CORS заголовки
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Accept');
+header('Access-Control-Max-Age: 86400');
+
+// Обработка предварительного OPTIONS запроса
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
+// Проверяем метод запроса
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo "Ошибка: Метод не поддерживается. Используйте POST";
+    exit;
+}
+
+// Подключаем LookingGlass
 require_once __DIR__ . '/LookingGlass.php';
 
 // Устанавливаем заголовки для предотвращения кеширования
